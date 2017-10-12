@@ -7,14 +7,15 @@ To deploy on [`now`](https://now.sh), you would need an external MongoDB cloud p
 ```bash
 $ git clone https://github.com/errbit/errbit.git
 cd errbit
+bundle install
 ```
 
 ### Setup your secrets in our `now` account.
 ```bash
-$ now secrets add mongo-url mongodb://my-mongo-host
+$ now secrets add mongo-url "mongodb://my-mongo-host"
 
 # Setup your application secret
-$ now secrets add secret-key-base $(rake secret)
+$ now secrets add secret-key-base $(bundle exec rake secret)
 
 # Optional secrets
 $ now secrets add smtp-domain smtp.some-provider.com
@@ -31,6 +32,15 @@ RACK_ENV=production
 SECRET_KEY_BASE=@secret-key-base
 ERRBIT_EMAIL_FROM='errbit@example.com'
 MONGO_URL=@mongo-url
+
+# optional smtp setup for mail notification (i.e. sendgrid, mailgun, etc...)
+EMAIL_DELIVERY_METHOD=smtp
+SMTP_AUTHENTICATION=plain
+SMTP_DOMAIN=yourdomain.com
+SMTP_SERVER=@smtp-domain
+SMTP_USERNAME=@smtp-username
+SMTP_PASSWORD=@smtp-password
+SMTP_PORT=587
 ```
  
 ### Run the bootstrap command
@@ -39,7 +49,6 @@ Since you can't run ssh in the now environment, running the bootstrap script cou
 #### 1) Run it on your local environment
 
 ```bash
-$ bundle install
 $ MONGO_URL=mongodb://my-mongo-host bundle exec rake errbit:bootstrap
 ```
 
@@ -58,6 +67,29 @@ USER errbit
 ```
 
 Then remove that line after the first deploy.
+
+### Filter out sensitive data
+
+If you're using the now free plan, you may want to filter out sensitive data from logs.
+
+An option could be to blacklist some parameters, so they would not appear in log files. Just edit the `config/initializer/filter_parameter_logging.rb`:
+
+```ruby
+Rails.application.config.filter_parameters += [:password, :app_id, :email, :key]
+```
+
+Another option could be to disable logs, or higher the log level. To do so, just add this to your `.env` file.
+
+```
+# To log only warnings and more
+ERRBIT_LOG_LEVEL=warn
+# For errors only
+ERRBIT_LOG_LEVEL=error
+# For no logs
+ERRBIT_LOG_LEVEL=unknown
+```
+
+For more informations about log levels, check the [official Rails documentation](http://guides.rubyonrails.org/debugging_rails_applications.html#log-levels)
 
 ### Run the deploy command:
 
