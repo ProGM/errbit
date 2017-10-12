@@ -7,6 +7,8 @@ require_relative '../lib/configurator'
 #
 # We use the first non-nil environment variable in the list. If the last array
 # element is a proc, it runs at the end, overriding the config value
+ENV['ERRBIT_HOST'] ||= URI(ENV['NOW_URL']).host if ENV['NOW_URL']
+
 Errbit::Config = Configurator.run(
   host:                      ['ERRBIT_HOST'],
   protocol:                  ['ERRBIT_PROTOCOL'],
